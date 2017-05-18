@@ -1,7 +1,6 @@
 C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\Assembly-CSharp.dll
 C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\Assembly-CSharp.pdb
 C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEditor.dll
-C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEngine.Analytics.dll
 C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEngine.dll
 C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEngine.Networking.dll
 C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEngine.UI.dll
@@ -17,7 +16,7 @@ C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEngine.xml
 C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEditor.xml
 C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEngine.UI.xml
 C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEngine.Networking.xml
-C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\UnityEngine.Analytics.xml
 C:\Users\Anne\Documents\PathfindingExample\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
 C:\Users\Anne\Documents\PathfindingExample\obj\Debug\Assembly-CSharp.dll
 C:\Users\Anne\Documents\PathfindingExample\obj\Debug\Assembly-CSharp.pdb
+C:\Users\Anne\Documents\PathfindingExample\Temp\bin\Debug\Priority Queue.dll
