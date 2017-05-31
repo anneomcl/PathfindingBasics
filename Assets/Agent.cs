@@ -16,21 +16,28 @@ public class Agent : MonoBehaviour {
 	bool solutionVisible;
 	string prevAlgo;
 
-	bool moveCube = false;
+    Camera camera;
+
+    bool moveCube = false;
 	int i;
 
 	// Use this for initialization
-	void Start () {
-		nodeNetwork = GameObject.Find ("NodeNetwork").GetComponent<NodeNetworkCreator> ();
+	void Start ()
+    {
+        camera = FindObjectOfType<Camera>();
+        nodeNetwork = GameObject.Find ("NodeNetwork").GetComponent<NodeNetworkCreator> ();
 		obstacles = GameObject.Find ("NodeNetwork").GetComponent<NodeNetworkCreator> ().obstacles;
 		walkablePositions = nodeNetwork.walkablePositions;
 	}
 	
 	// Update is called once per frame
 	void Update () {
+
+        camera.transform.position = new Vector3(this.transform.position.x, 10, this.transform.position.z);
+
 		//Hacky way to move the cube along the path.
 		if (moveCube) {
-            float speed = 5 / Weight(path[i]);
+            float speed = 25 / Weight(path[i]);
 			float step = Time.deltaTime * speed;
 			transform.position = Vector3.MoveTowards (transform.position, path[i], step);
 			if (transform.position.Equals (path [i]) && i >= 0)
@@ -69,6 +76,8 @@ public class Agent : MonoBehaviour {
 
     Vector3 FindShortestPathAStar(Vector3 startPosition, Vector3 goalPosition, string heuristic) {
 
+        float timeNow = Time.realtimeSinceStartup;
+
         // A* tries to minimize f(x) = g(x) + h(x), where g(x) is the distance from the start to node "x" and
         //    h(x) is some heuristic that must be admissible, meaning it never overestimates the cost to the next node.
         //    There are formal logical proofs you can look up that determine how heuristics are and are not admissible.
@@ -99,7 +108,7 @@ public class Agent : MonoBehaviour {
         //    In this case we will input nodes with their calculated distances from the start g(x),
         //    so we will always take the node with the lowest distance from the queue.
         SimplePriorityQueue<Vector3, int> priorityQueue = new SimplePriorityQueue<Vector3, int>();
-        priorityQueue.Enqueue(startPosition, distanceFromStart[startPosition]);
+        priorityQueue.Enqueue(startPosition, heuristicScore[startPosition]);
 
         while(priorityQueue.Count > 0)
         {
@@ -110,6 +119,7 @@ public class Agent : MonoBehaviour {
             if (curr == goalPosition)
             {
                 print("A*" + heuristic + ": " + distanceFromStart[goalPosition]);
+                print("A*" + heuristic + " time: " + (Time.realtimeSinceStartup - timeNow).ToString());
                 return goalPosition;
             }
 
@@ -132,7 +142,7 @@ public class Agent : MonoBehaviour {
                 // If we have not explored the neighbor, add it to the queue
                 if (!priorityQueue.Contains(node))
                 {
-                    priorityQueue.Enqueue(node, distanceFromStart[node]);
+                    priorityQueue.Enqueue(node, heuristicScore[node]);
                 }
                 // If our distance to this neighbor is MORE than another calculated shortest path
                 //    to this neighbor, skip it.
@@ -158,43 +168,63 @@ public class Agent : MonoBehaviour {
 	//Returns the startPosition if no solution is found.
 	Vector3 FindShortestPathDijkstra(Vector3 startPosition, Vector3 goalPosition){
 
-		HashSet<Vector3> unexploredNodes = new HashSet<Vector3> ();
-        IDictionary<Vector3, int> distances = new Dictionary<Vector3, int>();
-        IEnumerable<Vector3> validNodes = walkablePositions
-			.Where (x => x.Value == true)
-			.Select (x => x.Key);
+        float timeNow = Time.realtimeSinceStartup;
 
-		foreach (Vector3 vertex in validNodes) {
-			distances.Add (new KeyValuePair<Vector3, int> (vertex, int.MaxValue));
+        HashSet<Vector3> exploredNodes = new HashSet<Vector3>();
+
+        //A priority queue containing the shortest distance so far from the start to a given node
+        IPriorityQueue<Vector3, int> priority = new SimplePriorityQueue<Vector3, int>();
+
+        //A list of all nodes that are walkable, initialized to have infinity distance from start
+        IDictionary<Vector3, int> distances = walkablePositions
+            .Where(x => x.Value == true)
+            .ToDictionary(x => x.Key, x => int.MaxValue);
+        
+        //The parent of all nodes is "blank" ((-1, -1, -1) is invalid for our environment)
+        foreach (Vector3 vertex in distances.Keys.ToList()) {
 			nodeParents.Add (new KeyValuePair<Vector3, Vector3> (vertex, new Vector3(-1, -1, -1)));
-			unexploredNodes.Add (vertex);
-		}
+        }
 
-		distances [startPosition] = 0;
+        //Our distance from the start to itself is 0
+        distances[startPosition] = 0;
+        priority.Enqueue(startPosition, 0);
 
-		while (unexploredNodes.Count > 0) {
-			Vector3 curr = distances.Where(x => unexploredNodes.Contains(x.Key))
-									.OrderBy (x => x.Value).First ().Key;
-			if (curr == goalPosition)
-            {
-                print("Dijkstra: " + distances[goalPosition]);
-                return goalPosition;
-            }
+        while (priority.Count > 0) {
 
-			unexploredNodes.Remove (curr);
+            Vector3 curr = priority.Dequeue();
+
+            exploredNodes.Add(curr);
 
 			IList<Vector3> nodes = GetWalkableNodes (curr);
 
+			//Look at each neighbor to the node
 			foreach (Vector3 node in nodes) {
-				int dist = distances [curr] + Weight (node);
-				if (dist < distances [node]) {
+                if (exploredNodes.Contains(node))
+                {
+                    continue;
+                }
+
+                if (!priority.Contains(node))
+                {
+                    priority.Enqueue(node, distances[node]);
+                }
+
+                int dist = distances[curr] + Weight(node);
+
+                //If the distance to the parent, PLUS the distance added by the neighbor,
+                //is less than the current distance to the neighbor,
+                //update the neighbor's paent to curr, update its current best distance
+                if (dist < distances [node]) {
 					distances [node] = dist;
 					nodeParents [node] = curr;
 				}
 			}
 		}
 
-		return startPosition;
+        print("Dijkstra: " + distances[goalPosition]);
+        print("Dijkstra time: " + (Time.realtimeSinceStartup - timeNow).ToString());
+
+        return goalPosition;
 	}
 
 	int Weight(Vector3 node) {
@@ -389,8 +419,12 @@ public class Agent : MonoBehaviour {
 			new Vector3 (curr.x + 1, curr.y, curr.z),
 			new Vector3 (curr.x - 1, curr.y, curr.z),
 			new Vector3 (curr.x, curr.y, curr.z + 1),
-			new Vector3 (curr.x, curr.y, curr.z - 1)
-		};
+			new Vector3 (curr.x, curr.y, curr.z - 1),
+            new Vector3 (curr.x + 1, curr.y, curr.z + 1),
+            new Vector3 (curr.x + 1, curr.y, curr.z - 1),
+            new Vector3 (curr.x - 1, curr.y, curr.z + 1),
+            new Vector3 (curr.x - 1, curr.y, curr.z - 1)
+        };
 
 		foreach (Vector3 node in possibleNodes) {
 			if (CanMove (node)) {
