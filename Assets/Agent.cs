@@ -76,6 +76,7 @@ public class Agent : MonoBehaviour {
 
     Vector3 FindShortestPathAStar(Vector3 startPosition, Vector3 goalPosition, string heuristic) {
 
+        uint nodeVisitCount = 0;
         float timeNow = Time.realtimeSinceStartup;
 
         // A* tries to minimize f(x) = g(x) + h(x), where g(x) is the distance from the start to node "x" and
@@ -114,12 +115,14 @@ public class Agent : MonoBehaviour {
         {
             // Get the node with the least distance from the start
             Vector3 curr = priorityQueue.Dequeue();
+            nodeVisitCount++;
 
             // If our current node is the goal then stop
             if (curr == goalPosition)
             {
                 print("A*" + heuristic + ": " + distanceFromStart[goalPosition]);
                 print("A*" + heuristic + " time: " + (Time.realtimeSinceStartup - timeNow).ToString());
+                print(string.Format("A* {0} visits: {1} ({2:F2}%)", heuristic, nodeVisitCount, (nodeVisitCount / (double)walkablePositions.Count) * 100));
                 return goalPosition;
             }
 
@@ -168,6 +171,7 @@ public class Agent : MonoBehaviour {
 	//Returns the startPosition if no solution is found.
 	Vector3 FindShortestPathDijkstra(Vector3 startPosition, Vector3 goalPosition){
 
+        uint nodeVisitCount = 0;
         float timeNow = Time.realtimeSinceStartup;
 
         HashSet<Vector3> exploredNodes = new HashSet<Vector3>();
@@ -192,6 +196,7 @@ public class Agent : MonoBehaviour {
         while (priority.Count > 0) {
 
             Vector3 curr = priority.Dequeue();
+            nodeVisitCount++;
 
             exploredNodes.Add(curr);
 
@@ -223,6 +228,7 @@ public class Agent : MonoBehaviour {
 
         print("Dijkstra: " + distances[goalPosition]);
         print("Dijkstra time: " + (Time.realtimeSinceStartup - timeNow).ToString());
+        print(string.Format("Dijkstra visits: {0} ({1:F2}%)", nodeVisitCount, (nodeVisitCount / (double)walkablePositions.Count) * 100));
 
         return goalPosition;
 	}
@@ -246,14 +252,23 @@ public class Agent : MonoBehaviour {
 	//Returns the goalPosition if a solution is found.
 	//Returns the startPosition if no solution is found.
 	Vector3 FindShortestPathBFS(Vector3 startPosition, Vector3 goalPosition){
+
+        uint nodeVisitCount = 0;
+        float timeNow = Time.realtimeSinceStartup;
+
 		Queue<Vector3> queue = new Queue<Vector3> ();
 		HashSet<Vector3> exploredNodes = new HashSet<Vector3> ();
 		queue.Enqueue (startPosition);
 
 		while (queue.Count != 0) {
 			Vector3 currentNode = queue.Dequeue ();
+            nodeVisitCount++;
+
 			if (currentNode == goalPosition) {
-				return currentNode;
+                print("BFS time: " + (Time.realtimeSinceStartup - timeNow).ToString());
+                print(string.Format("BFS visits: {0} ({1:F2}%)", nodeVisitCount, (nodeVisitCount / (double)walkablePositions.Count) * 100));
+
+                return currentNode;
 			}
 
 			IList<Vector3> nodes = GetWalkableNodes (currentNode);
@@ -280,13 +295,22 @@ public class Agent : MonoBehaviour {
 	//Returns the goalPosition if a solution is found.
 	//Returns the startPosition if no solution is found.
 	Vector3 FindShortestPathDFS(Vector3 startPosition, Vector3 goalPosition){
+
+        uint nodeVisitCount = 0;
+        float timeNow = Time.realtimeSinceStartup;
+
 		Stack<Vector3> stack = new Stack<Vector3> ();
 		HashSet<Vector3> exploredNodes = new HashSet<Vector3> ();
 		stack.Push (startPosition);
 
 		while (stack.Count != 0) {
 			Vector3 currentNode = stack.Pop ();
+            nodeVisitCount++;
+
 			if (currentNode == goalPosition) {
+                print("DFS time: " + (Time.realtimeSinceStartup - timeNow).ToString());
+                print(string.Format("DFS visits: {0} ({1:F2}%)", nodeVisitCount, (nodeVisitCount / (double)walkablePositions.Count) * 100));
+
 				return currentNode;
 			}
 
